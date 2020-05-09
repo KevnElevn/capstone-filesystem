@@ -14,13 +14,14 @@ otherNodes.remove(thisNode)
 #Run server listening on 'thisNode' port
 server = subprocess.Popen(["./server", thisNode])
 #Create FAT if there isn't one
-if not os.path.exists("fat.txt") :
-    fatFile = open("fat.txt", "w")
-    fatFile.write("Filename\tBlock\tNode\n")
-    fatFile.close()
+#if not os.path.exists("fat.txt") :
+fatFile = open("fat.txt", "w")
+fatFile.write("Filename\tBlock\tNode\n")
+fatFile.close()
+#Watch updates.txt
+watcher = subprocess.Popen(["python", "updatewatcher.py"])
 #Continuously ask for input
-loop = 1
-while loop == 1 :
+while 1 :
     command = input("Enter command: \n\
     showfat\n\
     add <filename>\n\
@@ -34,6 +35,7 @@ while loop == 1 :
     #Terminate server before exiting
     elif command == "exit" :
         server.kill()
+        watcher.kill()
         exit()
     #Input has more than one word
     else :
