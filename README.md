@@ -11,10 +11,13 @@ Have a 'files' directory within each node directory
 
 Edit each node's config.txt to configure it
 
-Run 'python filesystem.py' from each node
+Run `python filesystem.py` from each node
 
 Follow output instructions
 
-'add <filename>' takes a file in the node directory. File blocks are stored in the 'files' directory. Reconstructed files are in the root directory.
+`add <filename>` takes a file in the node directory. File blocks are stored in the 'files' directory.
+Original files should be deleted in theory, but are not
 
-Enter 'exit' to quit
+`get <filename>` reconstructs files in the node directory.
+
+Enter `exit` to quit
