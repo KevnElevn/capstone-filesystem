@@ -1,13 +1,13 @@
 import os
 import time
 #Time of last file modification
-lastChanged = os.stat("updates.txt").st_mtime
+lastChanged = os.stat("updates.txt").st_size
 
 while 1:
     #Wait 100ms between checking
     time.sleep(.100)
     #Check for changes
-    newChanged = os.stat("updates.txt").st_mtime
+    newChanged = os.stat("updates.txt").st_size
     if newChanged != lastChanged :
         #File has changed; Make a new file and swap it with updates.txt
         newUpdatesFile = open("x.txt", "w")
@@ -15,7 +15,7 @@ while 1:
         os.rename("updates.txt", "process.txt")
         os.rename("x.txt", "updates.txt")
         #Set the new lastChanged time
-        lastChanged = os.stat("updates.txt").st_mtime
+        lastChanged = os.stat("updates.txt").st_size
         #Process updates
         processFile = open("process.txt", "r")
         processLine = processFile.readline()

@@ -58,45 +58,46 @@ while 1 :
             fatFile.close()
             #File is new
             if found == 0 :
-                filename = command[1]
-                fileSize = os.path.getsize(filename)
-                newFile = open(filename, "rb")
-                bytesRead = 0
-                blockNum = 0
-                counter = 0
-                blocks = []
-                error = 0
-                #Chop up file and distribute
-                while bytesRead < fileSize :
-                    #Make block file
-                    blockName = filename+".b"+str(blockNum)
-                    newBlock = open(blockName, "wb")
-                    newBlock.write(newFile.read(blockSize))
-                    bytesRead += blockSize
-                    newBlock.close()
-                    blocks.append(blockName)
-                    #Send block file
-                    destinationIndex = counter % (len(otherNodes)+1)
-                    if destinationIndex == len(otherNodes) :
-                        destinationNode = thisNode
-                    else :
-                        destinationNode = otherNodes[destinationIndex]
-                    error = subprocess.call(["./client", "w", blockName, destinationNode])
-                    if not error == 0 :
-                        server.kill()
-                        print ("Error ", error)
-                        exit()
-                    #Update FAT
-                    fatFile = open("fat.txt", "a")
-                    fatFile.write(command[1] + '\t' + str(blockNum) + '\t' + destinationNode + '\n')
-                    fatFile.close()
-                    os.remove(blockName)
-                    #Update other nodes
-                    for i in otherNodes :
-                        subprocess.call(["./client", "u", "a:"+filename+":"+str(blockNum)+":"+destinationNode+":", i])
-                    blockNum += 1
-                    counter += 1
-                newFile.close()
+                if not os.path.exists(command[1]) :
+                    print("File not found")
+                else :
+                    filename = command[1]
+                    fileSize = os.path.getsize(filename)
+                    newFile = open(filename, "rb")
+                    bytesRead = 0
+                    blockNum = 0
+                    counter = 0
+                    blocks = []
+                    error = 0
+                    #Chop up file and distribute
+                    while bytesRead < fileSize :
+                        #Make block file
+                        blockName = filename+".b"+str(blockNum)
+                        newBlock = open(blockName, "wb")
+                        newBlock.write(newFile.read(blockSize))
+                        bytesRead += blockSize
+                        newBlock.close()
+                        blocks.append(blockName)
+                        #Send block file
+                        destinationIndex = counter % (len(otherNodes)+1)
+                        if destinationIndex == len(otherNodes) :
+                            destinationNode = thisNode
+                        else :
+                            destinationNode = otherNodes[destinationIndex]
+                        error = subprocess.call(["./client", "w", blockName, destinationNode])
+                        if not error == 0 :
+                            break
+                        #Update FAT
+                        fatFile = open("fat.txt", "a")
+                        fatFile.write(command[1] + '\t' + str(blockNum) + '\t' + destinationNode + '\n')
+                        fatFile.close()
+                        os.remove(blockName)
+                        #Update other nodes
+                        for i in otherNodes :
+                            error = subprocess.call(["./client", "u", "a:"+filename+":"+str(blockNum)+":"+destinationNode+":", i])
+                        blockNum += 1
+                        counter += 1
+                    newFile.close()
             #File already in FAT
             else :
                 print("File with given name already exists")
@@ -107,18 +108,24 @@ while 1 :
             fatLine = fatFile.readline()
             blocks = []
             while len(fatLine) != 0 :
+                fatLine = fatLine.split('\n')[0]
                 fatLine = fatLine.split('\t')
                 if command[1] == fatLine[0] :
-                    blocks.append(len(blocks))
+                    blocks.append(fatLine[0]+":"+fatLine[1]+":"+fatLine[2])
                 fatLine = fatFile.readline()
             fatFile.close()
             #File found, retrieve
             if len(blocks) > 0 :
-                getFile = open(command[1], "w")
-                getFile.close()
                 getFile = open(command[1], "ab")
+                error = 0
                 for i in blocks :
-                    blockName = "./files/"+command[1]+".b"+str(i)
+                    fileBlockEntry = i.split(':')
+                    blockName = fileBlockEntry[0]+".b"+fileBlockEntry[1]
+                    #If block is local, copy to node directory
+                    if fileBlockEntry[2] == thisNode :
+                        subprocess.call(["cp", "./files/"+blockName, "."])
+                    else :
+                        error = subprocess.call(["./client", "r", blockName, fileBlockEntry[2]])
                     blockFile = open(blockName, "rb")
                     getFile.write(blockFile.read())
                     os.remove(blockName)
