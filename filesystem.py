@@ -5,7 +5,6 @@ from config import setConfig
 #Configure with config.txt
 configData = []
 setConfig(configData)
-print(configData)
 blockSize = configData[0]
 thisNode = configData[1]
 otherNodes = configData
